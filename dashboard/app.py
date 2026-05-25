@@ -13,9 +13,9 @@ _dash_dir = os.path.dirname(os.path.abspath(__file__))
 if _dash_dir not in sys.path:
     sys.path.insert(0, _dash_dir)
 
-import streamlit as st
+import streamlit as st  # noqa: E402
 
-from utils import (
+from utils import (  # noqa: E402
     AUTH_ENABLED,
     DEMO_MODE,
     init_session,

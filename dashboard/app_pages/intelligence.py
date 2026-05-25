@@ -8,11 +8,8 @@ import streamlit as st
 
 from utils import (
     FAILURE_ICON,
-    SEVERITY_ICON,
     TREND_ICON,
-    _sev_color,
     _trend_color,
-    format_time_ago,
     get_clusters_data,
     get_ownership_data,
 )

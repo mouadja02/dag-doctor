@@ -148,7 +148,7 @@ with detail_col:
     state = incident.get("state", incident.get("status", "unknown")).upper()
 
     # Breadcrumb
-    st.caption(f":material/arrow_back: [Back to incidents](/incidents)")
+    st.caption(":material/arrow_back: [Back to incidents](/incidents)")
     st.markdown(f"### :material/receipt_long: {dag_id}")
 
     with st.container(border=True):

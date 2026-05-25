@@ -53,6 +53,8 @@ _TIMEOUT_PATTERNS = [
 _PERMISSION_PATTERNS = [
     re.compile(r"(?:permission\s+denied)", re.IGNORECASE),
     re.compile(r"(?:access\s+denied)", re.IGNORECASE),
+    re.compile(r"(?:authentication\s+failed)", re.IGNORECASE),
+    re.compile(r"(?:incorrect\s+username\s+or\s+password)", re.IGNORECASE),
     re.compile(r"(?:401|403).*?(?:unauthorized|forbidden)", re.IGNORECASE),
     re.compile(r"(?:not\s+authorized)", re.IGNORECASE),
 ]

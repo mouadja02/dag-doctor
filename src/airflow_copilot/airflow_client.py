@@ -131,32 +131,87 @@ class AirflowClient:
             logger.error("Failed to fetch task log: %s", exc)
             return ""
 
-    def _parse_structured_log(self, data: dict | list) -> str:
-        """Parse Airflow 3.x structured log response into plain text."""
-        import json
+    def get_task_log_path(
+        self, dag_id: str, run_id: str, task_id: str, try_number: int
+    ) -> str:
+        """Extract the log file path from the structured log response."""
+        path = (
+            f"/api/v2/dags/{dag_id}/dagRuns/{run_id}"
+            f"/taskInstances/{task_id}/logs/{try_number}"
+        )
+        try:
+            data = self._get(path)
+            entries = data if isinstance(data, list) else data.get("content", [])
+            for entry in entries:
+                if isinstance(entry, dict):
+                    sources = entry.get("sources", [])
+                    if sources:
+                        return str(sources[0])
+            return ""
+        except Exception:
+            return ""
 
+    def _parse_structured_log(self, data: dict | list) -> str:
+        """Parse Airflow 3.x structured log response into plain text.
+
+        Formats the JSON error_detail into a proper Python traceback
+        that the regex-based log parser can extract exception types from.
+        """
         entries = (
             data
             if isinstance(data, list)
             else data.get("content", data.get("logs", []))
         )
         lines: list[str] = []
+        log_path = ""
 
         for entry in entries:
             if not isinstance(entry, dict):
                 continue
 
+            # Extract log file path
+            sources = entry.get("sources", [])
+            if sources and not log_path:
+                log_path = str(sources[0])
+
             event = entry.get("event", "")
             error_detail = entry.get("error_detail")
 
             if error_detail and isinstance(error_detail, list):
-                lines.append("--- Error Details ---")
-                lines.append(json.dumps(error_detail, indent=2))
-                lines.append("--- End Error Details ---")
-            elif event:
+                lines.append(self._format_traceback(error_detail))
+            elif event and not event.startswith("::"):
+                # Skip GitHub Actions-style group markers
                 lines.append(event)
 
+        if log_path:
+            lines.append(f"Log file: {log_path}")
+
         return "\n".join(lines)
+
+    def _format_traceback(self, error_details: list) -> str:
+        """Format Airflow 3.x structured error_detail into a Python traceback."""
+        parts: list[str] = []
+        parts.append("Traceback (most recent call last):")
+
+        for err in error_details:
+            frames = err.get("frames", [])
+            for frame in frames:
+                filename = frame.get("filename", "<unknown>")
+                lineno = frame.get("lineno", "?")
+                name = frame.get("name", "?")
+                parts.append(f'  File "{filename}", line {lineno}, in {name}')
+
+            exc_type = err.get("exc_type", "")
+            exc_value = err.get("exc_value", "")
+
+            if frames and exc_type:
+                # Capture the full dotted exception path from exc_value
+                # e.g., "snowflake.connector.errors.ProgrammingError: ..."
+                parts.append(f"{exc_type}: {exc_value}")
+            elif exc_type:
+                parts.append(f"{exc_type}: {exc_value}")
+
+        return "\n".join(parts)
 
     def health_check(self) -> bool:
         """Verify connectivity to the Airflow API server."""

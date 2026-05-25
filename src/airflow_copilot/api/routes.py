@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import httpx
 import logging
 
 from fastapi import APIRouter, HTTPException, Query
@@ -22,6 +23,27 @@ airflow = AirflowClient()
 llm = get_llm_provider()
 
 
+def _airflow_error_to_http(exc: Exception) -> HTTPException:
+    """Convert Airflow API errors to proper FastAPI HTTPExceptions."""
+    if isinstance(exc, httpx.HTTPStatusError):
+        detail = "Airflow API error"
+        try:
+            body = exc.response.json()
+            detail = body.get("detail", str(exc))
+        except Exception:
+            detail = str(exc)
+        return HTTPException(
+            status_code=exc.response.status_code,
+            detail=detail,
+        )
+    if isinstance(exc, httpx.RequestError):
+        return HTTPException(
+            status_code=502,
+            detail=f"Airflow API unreachable: {exc}",
+        )
+    return HTTPException(status_code=502, detail=f"Airflow API error: {exc}")
+
+
 @router.get("/health")
 async def health():
     af_ok = airflow.health_check()
@@ -39,7 +61,7 @@ async def list_failed_runs(limit: int = Query(50, ge=1, le=200)):
         return {"count": len(runs), "failed_runs": [r.model_dump() for r in runs]}
     except Exception as e:
         logger.error("Failed to fetch DAG runs: %s", e)
-        raise HTTPException(status_code=502, detail=f"Airflow API error: {e}")
+        raise _airflow_error_to_http(e)
 
 
 @router.get("/airflow/failed-runs/{dag_id}/{run_id}")
@@ -60,7 +82,7 @@ async def get_failed_run_detail(dag_id: str, run_id: str):
         raise
     except Exception as e:
         logger.error("Failed to fetch DAG run detail: %s", e)
-        raise HTTPException(status_code=502, detail=f"Airflow API error: {e}")
+        raise _airflow_error_to_http(e)
 
 
 @router.post("/analyze")
@@ -74,7 +96,7 @@ async def analyze_failure(dag_id: str, run_id: str, task_id: str, try_number: in
         raise
     except Exception as e:
         logger.error("Failed to fetch task log: %s", e)
-        raise HTTPException(status_code=502, detail=f"Airflow API error: {e}")
+        raise _airflow_error_to_http(e)
 
     parsed = parse_log(error_log)
     classification = classify(parsed)

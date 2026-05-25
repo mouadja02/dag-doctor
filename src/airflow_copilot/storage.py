@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from typing import cast
 
 from sqlalchemy import Column, DateTime, Float, Integer, String, Text, create_engine
-from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from airflow_copilot.config import get_settings
 from airflow_copilot.models import AnalysisResult, FailureClassification, LLMExplanation

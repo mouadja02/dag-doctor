@@ -1,8 +1,0 @@
-[2026-05-25 06:45:02,789] {python.py:194} INFO - Done. Returned value was: None
-[2026-05-25 06:45:03,123] {taskinstance.py:1412} ERROR - Task failed with exception
-Traceback (most recent call last):
-  File "/opt/airflow/dags/dataset_updater.py", line 89, in fetch_on_chain_data
-    cursor.execute("SELECT metric_value FROM bitcoin_data.metrics WHERE metric_name = 'market_cap_usd'")
-  File "/usr/local/lib/python3.11/site-packages/snowflake/connector/cursor.py", line 789, in execute
-    raise ProgrammingError(f"002003 (42S02): SQL compilation error: Column 'market_cap_usd' does not exist")
-snowflake.connector.errors.ProgrammingError: 002003 (42S02): SQL compilation error: Column 'market_cap_usd' does not exist

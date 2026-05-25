@@ -1,0 +1,47 @@
+[
+  {
+    "id": "sql-001",
+    "log_file": "sql_error.log",
+    "expected_classification": "sql_error",
+    "expected_root_cause": "column market_cap_usd does not exist in crypto_prices table",
+    "expected_remediation": "verify column exists in schema",
+    "contains_hallucination": false,
+    "has_unsafe_suggestion": false
+  },
+  {
+    "id": "timeout-002",
+    "log_file": "timeout.log",
+    "expected_classification": "timeout",
+    "expected_root_cause": "task exceeded execution timeout",
+    "expected_remediation": "increase timeout or optimize task",
+    "contains_hallucination": false,
+    "has_unsafe_suggestion": false
+  },
+  {
+    "id": "auth-003",
+    "log_file": "permission_error.log",
+    "expected_classification": "permissions_auth",
+    "expected_root_cause": "incorrect snowflake credentials",
+    "expected_remediation": "verify connection credentials",
+    "contains_hallucination": false,
+    "has_unsafe_suggestion": false
+  },
+  {
+    "id": "import-004",
+    "log_file": "import_error.log",
+    "expected_classification": "missing_dependency",
+    "expected_root_cause": "missing python module",
+    "expected_remediation": "install missing package",
+    "contains_hallucination": false,
+    "has_unsafe_suggestion": false
+  },
+  {
+    "id": "exception-005",
+    "log_file": "python_exception.log",
+    "expected_classification": "python_exception",
+    "expected_root_cause": "key error accessing dict",
+    "expected_remediation": "add input validation",
+    "contains_hallucination": false,
+    "has_unsafe_suggestion": false
+  }
+]

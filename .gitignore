@@ -38,7 +38,6 @@ Thumbs.db
 htmlcov/
 .pytest_cache/
 .ruff_cache/
-tests/fixtures/
 
 # Docker
 docker-compose.override.yml

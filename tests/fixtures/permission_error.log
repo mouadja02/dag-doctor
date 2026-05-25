@@ -1,0 +1,10 @@
+[2026-05-25 09:15:00,001] {python.py:194} INFO - Connecting to Snowflake
+[2026-05-25 09:15:02,123] {python.py:200} INFO - Executing query in BITCOIN_DATA.RAW
+[2026-05-25 09:15:03,456] {connection.py:567} ERROR - Snowflake connection failed: 403 Forbidden
+[2026-05-25 09:15:03,789] {taskinstance.py:1412} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/opt/airflow/dags/dataset_updater.py", line 45, in execute
+    hook.run("SELECT COUNT(*) FROM BITCOIN_DATA.RAW.BITCOIN_NEWS")
+  File "/usr/local/lib/python3.11/site-packages/airflow/providers/snowflake/hooks/snowflake.py", line 134, in run
+    raise DatabaseError(f"Snowflake query failed: {e}")
+snowflake.connector.errors.DatabaseError: Incorrect username or password was specified. Authentication failed for user DATAOPS.

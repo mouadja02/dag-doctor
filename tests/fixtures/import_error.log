@@ -1,0 +1,9 @@
+[2026-05-25 10:00:00,001] {dag_processor.py:456} INFO - Processing DAG: bitcoin_fancy_new_metrics
+[2026-05-25 10:00:01,123] {dag_processor.py:478} WARNING - Failed to import DAG
+[2026-05-25 10:00:01,456] {dag_processor.py:489} ERROR - DAG import error
+Traceback (most recent call last):
+  File "/opt/airflow/dags/fancy_metrics_dag.py", line 12, in <module>
+    from web3 import Web3
+ModuleNotFoundError: No module named 'web3'
+[2026-05-25 10:00:02,123] {taskinstance.py:1412} ERROR - Task failed with exception
+ImportError: Could not import DAG 'fancy_metrics_dag': No module named 'web3'

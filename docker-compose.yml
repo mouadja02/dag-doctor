@@ -1,0 +1,38 @@
+services:
+  api:
+    build: .
+    command: uvicorn airflow_copilot.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./src:/app/src
+      - ./data:/app/data
+      # Optional: mount Airflow logs for file system fallback access
+      # - ./docker/data/airflow/logs:/app/airflow_logs:ro
+    networks:
+      - dag_doctor_net
+    restart: unless-stopped
+
+  dashboard:
+    build: .
+    command: streamlit run dashboard/app.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    volumes:
+      - ./dashboard:/app/dashboard
+      - ./src:/app/src
+    environment:
+      - API_BASE_URL=http://api:8000
+    networks:
+      - dag_doctor_net
+    depends_on:
+      - api
+    restart: unless-stopped
+
+networks:
+  dag_doctor_net:
+    driver: bridge

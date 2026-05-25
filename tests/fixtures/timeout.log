@@ -1,0 +1,7 @@
+[2026-05-25 08:00:00,001] {python.py:194} INFO - Starting data download from API
+[2026-05-25 08:00:02,456] {python.py:200} INFO - Downloading batch 1 of 50
+[2026-05-25 08:00:04,789] {python.py:205} INFO - Downloading batch 2 of 50
+[2026-05-25 08:15:00,123] {local_task_job_runner.py:321} WARNING - Task duration exceeds execution_timeout
+[2026-05-25 08:15:00,456] {local_task_job_runner.py:345} ERROR - Sending SIGTERM signal to task process
+[2026-05-25 08:15:01,789] {taskinstance.py:1412} ERROR - Task failed with exception
+AirflowTaskTimeout: Task timed out after 900 seconds of execution

@@ -1,0 +1,45 @@
+# Environment
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Database
+data/
+*.db
+*.sqlite3
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Test artifacts
+.coverage
+htmlcov/
+.pytest_cache/
+.ruff_cache/
+
+# Docker
+docker-compose.override.yml
+
+# Hosted Airflow (TEST CLONE ONLY)
+airflow-self-hosted/

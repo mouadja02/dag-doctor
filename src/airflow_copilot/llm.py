@@ -34,6 +34,9 @@ class LLMProvider:
     ) -> LLMExplanation:
         raise NotImplementedError
 
+    def provider_name(self) -> str:
+        return "base"
+
 
 class OpenRouterProvider(LLMProvider):
     """OpenRouter provider using the OpenAI-compatible API."""
@@ -49,6 +52,9 @@ class OpenRouterProvider(LLMProvider):
             base_url="https://openrouter.ai/api/v1",
             api_key=self.api_key,
         )
+
+    def provider_name(self) -> str:
+        return "openrouter"
 
     def explain(
         self,
@@ -88,6 +94,9 @@ class FallbackProvider(LLMProvider):
         classification: FailureClassification,
     ) -> LLMExplanation:
         return _fallback_explanation(classification)
+
+    def provider_name(self) -> str:
+        return "fallback"
 
 
 def get_llm_provider() -> LLMProvider:

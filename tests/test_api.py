@@ -7,8 +7,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from airflow_copilot.main import app
-from airflow_copilot.api.routes import airflow
-from airflow_copilot.storage import AnalysisRecord, Storage
+from airflow_copilot.database import init_db, get_session
+from airflow_copilot.orm import AnalysisRecord
 
 TEST_TOKEN = "eyJ.xxx.yyy"
 
@@ -17,18 +17,15 @@ AIRFLOW_URL = "http://localhost:8080"
 
 def _mock_airflow_api(httpx_mock):
     """Register all Airflow API endpoints that the client will call."""
-    # Health check
     httpx_mock.add_response(
         url=f"{AIRFLOW_URL}/api/v2/version",
         json={"version": "3.0.1", "git_version": ".dev0"},
     )
-    # Auth token
     httpx_mock.add_response(
         url=f"{AIRFLOW_URL}/auth/token",
         method="POST",
         json={"access_token": TEST_TOKEN},
     )
-    # DAG listing
     httpx_mock.add_response(
         url=f"{AIRFLOW_URL}/api/v2/dags",
         json={
@@ -39,7 +36,6 @@ def _mock_airflow_api(httpx_mock):
             "total_entries": 2,
         },
     )
-    # Failed DAG runs for demo_sql_error (with query params)
     httpx_mock.add_response(
         url=f"{AIRFLOW_URL}/api/v2/dags/demo_sql_error/dagRuns?limit=50&state=failed",
         json={
@@ -58,12 +54,10 @@ def _mock_airflow_api(httpx_mock):
             "total_entries": 1,
         },
     )
-    # Failed DAG runs for demo_timeout (with query params)
     httpx_mock.add_response(
         url=f"{AIRFLOW_URL}/api/v2/dags/demo_timeout/dagRuns?limit=50&state=failed",
         json={"dag_runs": [], "total_entries": 0},
     )
-    # Task instances for the failed run
     httpx_mock.add_response(
         url=f"{AIRFLOW_URL}/api/v2/dags/demo_sql_error/dagRuns/manual__2026-05-25T00:00:00/taskInstances",
         json={
@@ -86,7 +80,6 @@ def _mock_airflow_api(httpx_mock):
             "total_entries": 1,
         },
     )
-    # DAG run detail
     httpx_mock.add_response(
         url=f"{AIRFLOW_URL}/api/v2/dags/demo_sql_error/dagRuns/manual__2026-05-25T00:00:00",
         json={
@@ -100,7 +93,6 @@ def _mock_airflow_api(httpx_mock):
             "conf": {},
         },
     )
-    # Structured log for the failed task
     httpx_mock.add_response(
         url=(
             f"{AIRFLOW_URL}/api/v2/dags/demo_sql_error/dagRuns/"
@@ -136,18 +128,16 @@ def _mock_airflow_api(httpx_mock):
 
 @pytest.fixture
 def client():
+    init_db()
     return TestClient(app)
 
 
 @pytest.fixture(autouse=True)
 def clean_db():
-    storage = Storage()
-    with storage.Session() as session:
+    init_db()
+    with get_session() as session:
         session.query(AnalysisRecord).delete()
         session.commit()
-    # Reset cached auth between tests
-    airflow._token = None
-    airflow._token_expiry = 0.0
     yield
 
 
@@ -192,12 +182,17 @@ class TestFailedRuns:
 
     def test_handles_airflow_unavailable(self, client, httpx_mock):
         httpx_mock.add_response(
+            url=f"{AIRFLOW_URL}/api/v2/auth/token",
+            method="POST",
+            status_code=503,
+        )
+        httpx_mock.add_response(
             url=f"{AIRFLOW_URL}/auth/token",
             method="POST",
             status_code=503,
         )
         resp = client.get("/airflow/failed-runs")
-        assert resp.status_code == 503
+        assert resp.status_code == 502
 
 
 @pytest.mark.httpx_mock(
@@ -277,7 +272,6 @@ class TestAnalyze:
 class TestReports:
     def test_lists_stored_reports(self, client, httpx_mock):
         _mock_airflow_api(httpx_mock)
-        # First create a report by analyzing
         client.post(
             "/analyze",
             params={
@@ -297,7 +291,6 @@ class TestReports:
 
     def test_gets_report_by_id(self, client, httpx_mock):
         _mock_airflow_api(httpx_mock)
-        # Create a report first
         create_resp = client.post(
             "/analyze",
             params={

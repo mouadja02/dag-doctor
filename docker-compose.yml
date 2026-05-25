@@ -6,13 +6,20 @@ services:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      - DATABASE_URL=postgresql://dagdoctor:dagdoctor@dd-postgres:5432/dagdoctor
+      - AIRFLOW_BASE_URL=http://airflow-apiserver:8080
+      - AIRFLOW_USERNAME=airflow
+      - AIRFLOW_PASSWORD=airflow
     volumes:
       - ./src:/app/src
       - ./data:/app/data
-      # Optional: mount Airflow logs for file system fallback access
-      # - ./docker/data/airflow/logs:/app/airflow_logs:ro
     networks:
       - dag_doctor_net
+      - airflow_network
+    depends_on:
+      dd-postgres:
+        condition: service_healthy
     restart: unless-stopped
 
   dashboard:
@@ -29,10 +36,35 @@ services:
       - API_BASE_URL=http://api:8000
     networks:
       - dag_doctor_net
+      - airflow_network
     depends_on:
       - api
+    restart: unless-stopped
+
+  dd-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: dagdoctor
+      POSTGRES_PASSWORD: dagdoctor
+      POSTGRES_DB: dagdoctor
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - dag_doctor_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dagdoctor"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
 networks:
   dag_doctor_net:
     driver: bridge
+  airflow_network:
+    external: true
+
+volumes:
+  pgdata:

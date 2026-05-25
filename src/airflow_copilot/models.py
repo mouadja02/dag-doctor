@@ -59,6 +59,12 @@ class LLMExplanation(BaseModel):
     what_not_to_do: list[str] = Field(default_factory=list)
 
 
+class EvidenceItem(BaseModel):
+    source_line: str = ""
+    context_lines: list[str] = Field(default_factory=list)
+    signal_type: str = ""
+
+
 class AnalysisResult(BaseModel):
     id: int | None = None
     dag_id: str
@@ -70,3 +76,6 @@ class AnalysisResult(BaseModel):
     explanation: LLMExplanation | None = None
     report_markdown: str = ""
     created_at: datetime | None = None
+    severity: str = "medium"
+    evidence: list[EvidenceItem] = Field(default_factory=list)
+    owner: str = ""

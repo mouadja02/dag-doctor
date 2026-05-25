@@ -1,0 +1,86 @@
+[client]
+toolbarMode = "minimal"
+
+[theme.light]
+primaryColor = "#2563EB"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F8FAFC"
+codeBackgroundColor = "#F1F5F9"
+textColor = "#1E293B"
+linkColor = "#2563EB"
+borderColor = "#E2E8F0"
+showWidgetBorder = true
+showSidebarBorder = true
+baseRadius = "12px"
+buttonRadius = "10px"
+baseFontSize = 15
+baseFontWeight = 400
+headingFontSizes = ["32px", "24px", "20px", "18px", "15px", "13px"]
+headingFontWeights = [700, 700, 600, 600, 500, 500]
+codeFontSize = "13px"
+codeFontWeight = 400
+linkUnderline = false
+
+font = "'Plus Jakarta Sans':https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+codeFont = "'Space Mono':https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap"
+
+redColor = "#DC2626"
+orangeColor = "#EA580C"
+yellowColor = "#CA8A04"
+greenColor = "#16A34A"
+blueColor = "#2563EB"
+violetColor = "#7C3AED"
+grayColor = "#64748B"
+
+chartCategoricalColors = ["#2563EB", "#16A34A", "#7C3AED", "#EA580C", "#DC2626", "#CA8A04", "#64748B"]
+dataframeBorderColor = "#E2E8F0"
+dataframeHeaderBackgroundColor = "#F1F5F9"
+
+[theme.light.sidebar]
+backgroundColor = "#F1F5F9"
+secondaryBackgroundColor = "#E2E8F0"
+codeBackgroundColor = "#E2E8F0"
+textColor = "#1E293B"
+borderColor = "#CBD5E1"
+
+[theme.dark]
+primaryColor = "#60A5FA"
+backgroundColor = "#0F172A"
+secondaryBackgroundColor = "#1E293B"
+codeBackgroundColor = "#1E293B"
+textColor = "#E2E8F0"
+linkColor = "#60A5FA"
+borderColor = "#334155"
+showWidgetBorder = true
+showSidebarBorder = true
+baseRadius = "12px"
+buttonRadius = "10px"
+baseFontSize = 15
+baseFontWeight = 400
+headingFontSizes = ["32px", "24px", "20px", "18px", "15px", "13px"]
+headingFontWeights = [700, 700, 600, 600, 500, 500]
+codeFontSize = "13px"
+codeFontWeight = 400
+linkUnderline = false
+
+font = "'Plus Jakarta Sans':https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+codeFont = "'Space Mono':https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap"
+
+redColor = "#F87171"
+orangeColor = "#FB923C"
+yellowColor = "#FACC15"
+greenColor = "#4ADE80"
+blueColor = "#60A5FA"
+violetColor = "#A78BFA"
+grayColor = "#94A3B8"
+
+chartCategoricalColors = ["#60A5FA", "#4ADE80", "#A78BFA", "#FB923C", "#F87171", "#FACC15", "#94A3B8"]
+dataframeBorderColor = "#334155"
+dataframeHeaderBackgroundColor = "#1E293B"
+
+[theme.dark.sidebar]
+backgroundColor = "#0F172A"
+secondaryBackgroundColor = "#1E293B"
+codeBackgroundColor = "#1E293B"
+textColor = "#E2E8F0"
+borderColor = "#334155"

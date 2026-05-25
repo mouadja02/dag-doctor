@@ -85,7 +85,24 @@ def _classification_section(result: AnalysisResult) -> str:
 
 
 def _evidence_section(result: AnalysisResult) -> str:
-    return "## Evidence from Logs\n\n```\n[Log analysis performed by dag-doctor rule-based classifier]\n```"
+    lines = ["## Evidence from Logs", ""]
+    if result.evidence:
+        for item in result.evidence:
+            signal_label = item.signal_type.replace("_", " ").title()
+            lines.append(f"**{signal_label}**")
+            if item.source_line:
+                lines.append(f"```\n{item.source_line}\n```")
+            if item.context_lines:
+                lines.append("\n```")
+                for ctx in item.context_lines:
+                    lines.append(ctx)
+                lines.append("```")
+            lines.append("")
+    else:
+        lines.append(
+            "```\n[Log analysis performed by dag-doctor rule-based classifier]\n```"
+        )
+    return "\n".join(lines)
 
 
 def _root_cause_section(result: AnalysisResult) -> str:
@@ -95,16 +112,26 @@ def _root_cause_section(result: AnalysisResult) -> str:
 
 
 def _remediation_section(result: AnalysisResult) -> str:
-    lines = ["## Suggested Safe Remediation"]
+    severity_tag = result.severity.upper() if result.severity != "medium" else "MEDIUM"
+    severity_emoji = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(
+        result.severity, "🟡"
+    )
+
+    lines = [
+        "## Suggested Safe Remediation",
+        f"**Severity**: {severity_emoji} {severity_tag}",
+        "",
+    ]
     if result.explanation and result.explanation.remediation_steps:
-        for i, step in enumerate(result.explanation.remediation_steps, 1):
-            lines.append(f"{i}. {step}")
+        for step in result.explanation.remediation_steps:
+            tag = "[REVIEW]" if result.severity == "high" else "[SAFE]"
+            lines.append(f"- {tag} {step}")
     else:
         lines.append("\nAnalysis pending.")
 
     if result.explanation and result.explanation.what_not_to_do:
         lines.append("\n## What NOT to Do")
-        for i, step in enumerate(result.explanation.what_not_to_do, 1):
+        for step in result.explanation.what_not_to_do:
             lines.append(f"- {step}")
 
     return "\n".join(lines)

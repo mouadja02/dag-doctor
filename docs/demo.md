@@ -1,67 +1,67 @@
 # Demo Guide
 
-## Prerequisites
+## Quick Start (Offline Demo Mode)
 
-1. A **test clone** of your Airflow instance running locally (Airflow 3.x)
-2. dag-doctor services running (API + Dashboard)
-3. OpenRouter API key configured (optional; fallback works without it)
-
-## Step-by-Step Demo
-
-### 1. Start the test Airflow instance
+Run dag-doctor in demo mode with pre-seeded incident fixtures — no Airflow required.
 
 ```bash
-cd /path/to/airflow-self-hosted-test
-docker compose up -d
+make demo
 ```
 
-### 2. Add demo DAGs to test Airflow
+Then open http://localhost:8501
+
+**What happens**: The dashboard shows 5 pre-seeded incidents (SQL schema drift,
+missing dependency, expired credential, upstream timeout, out-of-memory failure).
+Everything works offline — no Airflow instance, no LLM API key needed.
+
+## Demo Flow
+
+1. **KPI Cards**: See aggregate metrics at a glance (Failed Today, Avg Diagnosis Time, Top Category, Recurring Candidates).
+
+2. **Incident Queue**: Browse 5 incidents in a table with status, DAG name, task, owner, failure type, confidence, and severity.
+
+3. **Incident Detail**: Click the magnifying glass on any incident to open the detail panel.
+
+4. **Analyze**: Click "Analyze with dag-doctor" to see the full diagnosis:
+   - Failure classification with confidence
+   - Evidence snippet from the logs
+   - Plain-English root cause
+   - Safe remediation steps with [SAFE] / [REVIEW] tags
+   - "What NOT to Do" warning panel
+
+5. **Create Ticket**: Click "Create Ticket" to see the mocked Jira payload — title,
+   description, labels, assignee, priority, and Airflow deep link.
+
+6. **Download Report**: Export the incident report as Markdown.
+
+
+
+
+## Resetting Demo Data
 
 ```bash
-cp dag-doctor/demo_dags/*.py /path/to/airflow-self-hosted-test/dags/
+make reset-demo
 ```
 
-Wait ~30 seconds for Airflow to pick up the new DAGs.
+Or click "Reset Demo Data" in the dashboard sidebar.
 
-### 3. Trigger each demo DAG (manually)
+## Expected Results by Incident
 
-In the Airflow UI (http://localhost:8080):
-- Unpause each `demo_*` DAG
-- Trigger a manual run
-- Wait for the DAG to fail (1-5 seconds)
+| Incident | DAG | Classification | Confidence | Severity |
+|----------|-----|---------------|------------|----------|
+| sql-001 | `demo_sql_error` | SQL Error | 92% | Medium |
+| dep-002 | `demo_import_error` | Missing Dependency | 95% | Low |
+| auth-003 | `demo_auth_error` | Permissions/Auth | 95% | High |
+| time-004 | `demo_timeout` | Timeout | 90% | High |
+| oom-005 | `demo_oom_error` | OOM | 90% | High |
 
-Or via CLI:
-```bash
-docker compose exec airflow-scheduler airflow dags unpause demo_sql_error
-docker compose exec airflow-scheduler airflow dags trigger demo_sql_error
-```
+## Setup Options
 
-### 4. Start dag-doctor
-
-```bash
-cd dag-doctor
-docker compose up --build
-# Or locally:
-pip install -e ".[dev]"
-uvicorn airflow_copilot.main:app --reload &
-streamlit run dashboard/app.py
-```
-
-### 5. Open the dashboard
-
-Navigate to http://localhost:8501
-
-1. Click **Refresh** to see the failed DAG runs
-2. Click **Analyze** on a failed task
-3. View the classification, root cause, and remediation steps
-4. Download the Markdown incident report
-
-## Expected Results by DAG
-
-| Demo DAG | Failure Type | Classification |
-|----------|-------------|----------------|
-| `demo_sql_error` | SQL Error | `sql_error` (~0.95) |
-| `demo_python_exception` | Python Exception | `python_exception` (~0.50) |
-| `demo_timeout` | Timeout | `timeout` (~0.90) |
-| `demo_import_error` | Missing Dependency | `missing_dependency` (~0.95) |
-| `demo_auth_error` | Auth/Permissions | `permissions_auth` (~0.90) |
+| Goal | Command |
+|------|---------|
+| Demo (offline fixtures) | `make demo` |
+| Local dev (with Airflow) | `make dev` |
+| Docker (with Airflow) | `make docker-up` |
+| Run tests | `make test` |
+| Lint | `make lint` |
+| Clean DB | `make clean` |

@@ -1,0 +1,66 @@
+replicaCount: 2
+
+image:
+  repository: dag-doctor
+  pullPolicy: IfNotPresent
+  tag: latest
+
+service:
+  type: ClusterIP
+  port: 8000
+  metricsPort: 8000
+
+ingress:
+  enabled: false
+
+postgresql:
+  enabled: true
+  host: ""
+  port: 5432
+  database: dagdoctor
+  username: dagdoctor
+  password: ""
+  existingSecret: ""
+
+airflow:
+  baseUrl: http://airflow-apiserver:8080
+  username: airflow
+  password: ""
+  existingSecret: ""
+
+llm:
+  provider: openrouter
+  apiKey: ""
+  existingSecret: ""
+
+security:
+  secretKey: ""
+  allowedOrigins:
+    - http://localhost:8501
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+probes:
+  liveness:
+    path: /health/live
+    initialDelaySeconds: 10
+    periodSeconds: 30
+  readiness:
+    path: /health/ready
+    initialDelaySeconds: 5
+    periodSeconds: 10
+
+metrics:
+  enabled: true
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80

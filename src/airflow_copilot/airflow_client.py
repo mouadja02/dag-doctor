@@ -22,11 +22,16 @@ class AirflowClient:
     Safety: Only performs GET requests. Never mutates Airflow state.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        base_url: str | None = None,
+        username: str | None = None,
+        password: str | None = None,
+    ) -> None:
         settings = get_settings()
-        self.base_url = settings.airflow_base_url.rstrip("/")
-        self.username = settings.airflow_username
-        self.password = settings.airflow_password
+        self.base_url = (base_url or settings.airflow_base_url).rstrip("/")
+        self.username = username or settings.airflow_username
+        self.password = password or settings.airflow_password
         self._token: str | None = None
         self._token_expiry: float = 0.0
 
@@ -43,16 +48,49 @@ class AirflowClient:
         self._authenticate()
 
     def _authenticate(self) -> None:
-        """Authenticate via POST /auth/token to get a JWT."""
-        resp = self.client.post(
-            "/auth/token",
-            json={"username": self.username, "password": self.password},
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        self._token = data["access_token"]
-        self._token_expiry = time.time() + 3600  # default 1h expiry
-        self.client.headers["Authorization"] = f"Bearer {self._token}"
+        """Authenticate with Airflow 3.x REST API.
+
+        Airflow 3.x with FabAuthManager uses Basic Auth for the REST API.
+        We pass credentials on every request via Basic Auth header.
+        Also tries JWT token endpoint for future compatibility.
+        """
+        from base64 import b64encode
+
+        # Try JWT token endpoint first (for future Airflow versions / custom auth)
+        jwt_endpoints = ["/auth/token", "/api/v2/auth/token", "/api/v1/auth/token"]
+        for ep in jwt_endpoints:
+            try:
+                resp = self.client.post(
+                    ep,
+                    json={"username": self.username, "password": self.password},
+                )
+                if resp.status_code in (200, 201):
+                    data = resp.json()
+                    self._token = data.get("access_token", data.get("token", ""))
+                    if self._token:
+                        self._token_expiry = time.time() + 3000
+                        self.client.headers["Authorization"] = f"Bearer {self._token}"
+                        logger.info("JWT auth successful via %s", ep)
+                        return
+            except Exception:
+                continue
+
+        # Basic Auth fallback (works with Airflow 3.x FabAuthManager)
+        credentials = b64encode(f"{self.username}:{self.password}".encode()).decode()
+        self.client.headers["Authorization"] = f"Basic {credentials}"
+        self._token = f"basic-{credentials}"
+        self._token_expiry = time.time() + 3000
+
+        # Verify by making a test call
+        try:
+            resp = self.client.get("/api/v2/version")
+            if resp.status_code == 200:
+                logger.info("Basic Auth successful against Airflow API")
+                return
+        except Exception:
+            pass
+
+        logger.warning("Authentication against Airflow API may have failed")
 
     def _get(self, path: str, **params) -> dict:
         self._ensure_auth()
@@ -67,30 +105,12 @@ class AirflowClient:
         return [d["dag_id"] for d in data.get("dags", [])]
 
     def get_failed_dag_runs(self, limit: int = 50) -> list[DAGRun]:
-        """Fetch recent failed DAG runs across all DAGs."""
-        all_failed: list[DAGRun] = []
+        """Fetch recent failed DAG runs across all DAGs concurrently."""
         dag_ids = self.get_dags()
 
-        for dag_id in dag_ids:
-            if len(all_failed) >= limit:
-                break
-            try:
-                data = self._get(
-                    f"/api/v2/dags/{dag_id}/dagRuns",
-                    limit=limit,
-                    state="failed",
-                )
-                runs = data.get("dag_runs", [])
-                for r in runs:
-                    all_failed.append(self._parse_dag_run(r))
-            except Exception as exc:
-                logger.warning("Failed to fetch runs for DAG %s: %s", dag_id, exc)
+        from airflow_copilot.performance import fetch_dag_runs_concurrent
 
-        all_failed.sort(
-            key=lambda r: r.logical_date or "",
-            reverse=True,
-        )
-        return all_failed[:limit]
+        return fetch_dag_runs_concurrent(dag_ids, self.client, limit)
 
     def get_dag_run(self, dag_id: str, run_id: str) -> DAGRun | None:
         """Fetch a specific DAG run."""
